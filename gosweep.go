@@ -124,6 +124,20 @@ func (m *Minefield) Open(row, col int) {
 	m.floodFillOpen(row, col)
 }
 
+// ToggleFlag toggles cell state between flagged and closed
+func (m *Minefield) ToggleFlag(row, col int) {
+	if !m.isInBounds(row, col) {
+		return
+	}
+
+	cellState := m.field[row][col].s
+	if cellState == StateClosed {
+		m.field[row][col].s = StateFlagged
+	} else if cellState == StateFlagged {
+		m.field[row][col].s = StateClosed
+	}
+}
+
 func (m *Minefield) floodFillOpen(row, col int) {
 	if !m.isInBounds(row, col) {
 		return
