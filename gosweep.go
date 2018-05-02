@@ -104,6 +104,53 @@ func (m *Minefield) Print() {
 	}
 }
 
+// Open opens cell on the minefield
+func (m *Minefield) Open(row, col int) {
+	if !m.isInBounds(row, col) {
+		return
+	}
+
+	cellState := m.field[row][col].s
+	if cellState == StateOpened || cellState == StateFlagged {
+		return
+	}
+
+	cellType := m.field[row][col].t
+	if cellType == TypeMine {
+		// Game over
+		return
+	}
+
+	m.floodFillOpen(row, col)
+}
+
+func (m *Minefield) floodFillOpen(row, col int) {
+	if !m.isInBounds(row, col) {
+		return
+	}
+
+	cellType := m.field[row][col].t
+	cellState := m.field[row][col].s
+	if cellType == TypeMine || cellState == StateOpened {
+		return
+	}
+
+	m.field[row][col].s = StateOpened
+
+	if cellType != TypeEmpty {
+		return
+	}
+
+	m.floodFillOpen(row+1, col+1)
+	m.floodFillOpen(row-1, col-1)
+	m.floodFillOpen(row+1, col-1)
+	m.floodFillOpen(row-1, col+1)
+	m.floodFillOpen(row+1, col)
+	m.floodFillOpen(row-1, col)
+	m.floodFillOpen(row, col+1)
+	m.floodFillOpen(row, col-1)
+}
+
 func (m *Minefield) generateField() {
 	m.field = make([][]Cell, m.height)
 	for row := 0; row < m.height; row++ {
@@ -172,8 +219,12 @@ func (m *Minefield) getHint(row, col int) CellType {
 	return result
 }
 
+func (m *Minefield) isInBounds(row, col int) bool {
+	return col >= 0 && col < m.width && row >= 0 && row < m.height
+}
+
 func (m *Minefield) isMine(row, col int) bool {
-	if col < 0 || col >= m.width || row < 0 || row >= m.height {
+	if !m.isInBounds(row, col) {
 		return false
 	}
 
