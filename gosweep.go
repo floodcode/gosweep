@@ -67,7 +67,7 @@ func (m *Minefield) GetField() [][]Cell {
 
 // Print prints minefield
 func (m *Minefield) Print() {
-	printables := []string{
+	typeChars := []string{
 		TypeEmpty: " ",
 		Type1:     "1",
 		Type2:     "2",
@@ -80,10 +80,24 @@ func (m *Minefield) Print() {
 		TypeMine:  "*",
 	}
 
+	stateChars := map[int]string{
+		StateClosed:  "-",
+		StateFlagged: "F",
+	}
+
 	for row := 0; row < m.height; row++ {
 		for col := 0; col < m.width; col++ {
-			t := m.field[row][col].t
-			fmt.Printf("%s ", printables[t])
+			cellType := m.field[row][col].t
+			cellState := m.field[row][col].s
+
+			printable := "-"
+			if val, ok := stateChars[cellState]; ok {
+				printable = val
+			} else {
+				printable = typeChars[cellType]
+			}
+
+			fmt.Printf("%s ", printable)
 		}
 
 		fmt.Println()
