@@ -197,38 +197,15 @@ func (m *Minefield) generateField() {
 
 func (m *Minefield) getHint(row, col int) CellType {
 	var result int
-
-	if m.isMine(row+1, col+1) {
-		result++
-	}
-
-	if m.isMine(row+1, col-1) {
-		result++
-	}
-
-	if m.isMine(row-1, col+1) {
-		result++
-	}
-
-	if m.isMine(row-1, col-1) {
-		result++
-	}
-
-	if m.isMine(row, col+1) {
-		result++
-	}
-
-	if m.isMine(row, col-1) {
-		result++
-	}
-
-	if m.isMine(row+1, col) {
-		result++
-	}
-
-	if m.isMine(row-1, col) {
-		result++
-	}
+	b2i := map[bool]int{true: 1, false: 0}
+	result += b2i[m.isMine(row+1, col+1)]
+	result += b2i[m.isMine(row+1, col-1)]
+	result += b2i[m.isMine(row-1, col+1)]
+	result += b2i[m.isMine(row-1, col-1)]
+	result += b2i[m.isMine(row, col+1)]
+	result += b2i[m.isMine(row, col-1)]
+	result += b2i[m.isMine(row+1, col)]
+	result += b2i[m.isMine(row-1, col)]
 
 	return result
 }
