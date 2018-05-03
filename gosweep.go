@@ -108,7 +108,7 @@ func (m *Minefield) Print() {
 
 	for row := 0; row < m.height; row++ {
 		for col := 0; col < m.width; col++ {
-			cell := &m.field[row][col]
+			cell := m.getCell(row, col)
 			if val, ok := stateChars[cell.s]; ok {
 				fmt.Printf("%s ", val)
 			} else {
@@ -126,7 +126,7 @@ func (m *Minefield) Open(row, col int) {
 		return
 	}
 
-	cell := &m.field[row][col]
+	cell := m.getCell(row, col)
 	if cell.s == StateOpened || cell.s == StateFlagged {
 		return
 	}
@@ -145,7 +145,7 @@ func (m *Minefield) ToggleFlag(row, col int) {
 		return
 	}
 
-	cell := &m.field[row][col]
+	cell := m.getCell(row, col)
 	if cell.s == StateClosed {
 		cell.s = StateFlagged
 		m.flags++
@@ -160,7 +160,7 @@ func (m *Minefield) floodFillOpen(row, col int) {
 		return
 	}
 
-	cell := &m.field[row][col]
+	cell := m.getCell(row, col)
 	if cell.t == TypeMine || cell.s == StateOpened {
 		return
 	}
@@ -194,7 +194,7 @@ func (m *Minefield) generateField() {
 		randRow := rand.Intn(m.height)
 		randCol := rand.Intn(m.width)
 
-		cell := &m.field[randRow][randCol]
+		cell := m.getCell(randRow, randCol)
 		if cell.t == TypeEmpty {
 			cell.t = TypeMine
 			cell.s = StateClosed
@@ -204,7 +204,7 @@ func (m *Minefield) generateField() {
 
 	for row := 0; row < m.height; row++ {
 		for col := 0; col < m.width; col++ {
-			cell := &m.field[row][col]
+			cell := m.getCell(row, col)
 			if cell.t == TypeEmpty {
 				cell.t = m.getHint(row, col)
 			}
@@ -225,6 +225,10 @@ func (m *Minefield) getHint(row, col int) CellType {
 	result += b2i[m.isMine(row-1, col)]
 
 	return result
+}
+
+func (m *Minefield) getCell(row, col int) *Cell {
+	return &m.field[row][col]
 }
 
 func (m *Minefield) isInBounds(row, col int) bool {
