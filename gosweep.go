@@ -66,6 +66,26 @@ func (m *Minefield) GetField() [][]Cell {
 	return m.field
 }
 
+// GetWidth returns number of columns of the minefield grid
+func (m *Minefield) GetWidth() int {
+	return m.width
+}
+
+// GetHeigth returns number of rows of the minefield grid
+func (m *Minefield) GetHeigth() int {
+	return m.height
+}
+
+// GetMines returns number of mines on the minefield grid
+func (m *Minefield) GetMines() int {
+	return m.mines
+}
+
+// GetFlags returns number of flags on the minefield grid
+func (m *Minefield) GetFlags() int {
+	return m.flags
+}
+
 // Print prints minefield
 func (m *Minefield) Print() {
 	typeChars := []string{
