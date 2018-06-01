@@ -1,7 +1,6 @@
 package gosweep
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -12,13 +11,25 @@ type Minefield struct {
 	width  int
 	height int
 	mines  int
+	opened int
 	flags  int
+	state  GameState
 }
+
+// GameState represents current game state
+type GameState = int
+
+// Game states
+const (
+	GameRunning = 0
+	GameWin     = 1
+	GameLose    = 2
+)
 
 // Cell represents the cell on the minefield
 type Cell struct {
-	t CellType
-	s CellState
+	Type  CellType
+	State CellState
 }
 
 // CellType represents type of the cell on the minefield
@@ -48,12 +59,13 @@ const (
 	StateOpened  CellState = 2
 )
 
-// NewMinefield creates new minefield
-func NewMinefield(width, height, mines int) Minefield {
+// New creates new minefield
+func New(width, height, mines int) Minefield {
 	minefield := Minefield{
 		width:  width,
 		height: height,
 		mines:  mines,
+		state:  GameRunning,
 	}
 
 	minefield.generateField()
@@ -86,72 +98,64 @@ func (m *Minefield) GetFlags() int {
 	return m.flags
 }
 
-// Print prints minefield
-func (m *Minefield) Print() {
-	typeChars := []string{
-		TypeEmpty: " ",
-		Type1:     "1",
-		Type2:     "2",
-		Type3:     "3",
-		Type4:     "4",
-		Type5:     "5",
-		Type6:     "6",
-		Type7:     "7",
-		Type8:     "8",
-		TypeMine:  "*",
-	}
-
-	stateChars := map[int]string{
-		StateClosed:  "-",
-		StateFlagged: "F",
-	}
-
-	for row := 0; row < m.height; row++ {
-		for col := 0; col < m.width; col++ {
-			cell := m.getCell(row, col)
-			if val, ok := stateChars[cell.s]; ok {
-				fmt.Printf("%s ", val)
-			} else {
-				fmt.Printf("%s ", typeChars[cell.t])
-			}
-		}
-
-		fmt.Println()
-	}
+// GetState returns current game state
+func (m *Minefield) GetState() GameState {
+	return m.state
 }
 
 // Open opens cell on the minefield
 func (m *Minefield) Open(row, col int) {
-	if !m.isInBounds(row, col) {
+	if !m.isInBounds(row, col) || m.state != GameRunning {
 		return
 	}
 
 	cell := m.getCell(row, col)
-	if cell.s == StateOpened || cell.s == StateFlagged {
+	if cell.State == StateOpened || cell.State == StateFlagged {
 		return
 	}
 
-	if cell.t == TypeMine {
-		// Game over
+	if cell.Type == TypeMine {
+		m.openAll()
+		m.state = GameLose
 		return
 	}
 
 	m.floodFillOpen(row, col)
+
+	if m.opened == (m.width*m.height)-m.mines {
+		m.openAll()
+		m.state = GameWin
+	}
 }
 
 // ToggleFlag toggles state of the cell between flagged and closed
 func (m *Minefield) ToggleFlag(row, col int) {
-	if !m.isInBounds(row, col) {
+	if !m.isInBounds(row, col) || m.state != GameRunning {
 		return
 	}
 
 	cell := m.getCell(row, col)
-	if cell.s == StateClosed {
-		cell.s = StateFlagged
+	if cell.State == StateClosed {
+		cell.State = StateFlagged
 		m.flags++
-	} else if cell.s == StateFlagged {
-		cell.s = StateClosed
+	} else if cell.State == StateFlagged {
+		cell.State = StateClosed
 		m.flags--
+	}
+}
+
+func (m *Minefield) openAll() {
+	for row := 0; row < m.height; row++ {
+		for col := 0; col < m.width; col++ {
+			m.openCell(row, col)
+		}
+	}
+}
+
+func (m *Minefield) openCell(row, col int) {
+	if m.field[row][col].State != StateOpened {
+		m.field[row][col].State = StateOpened
+		m.opened++
 	}
 }
 
@@ -161,12 +165,12 @@ func (m *Minefield) floodFillOpen(row, col int) {
 	}
 
 	cell := m.getCell(row, col)
-	if cell.t == TypeMine || cell.s == StateOpened {
+	if cell.Type == TypeMine || cell.State == StateOpened {
 		return
 	}
 
-	cell.s = StateOpened
-	if cell.t != TypeEmpty {
+	m.openCell(row, col)
+	if cell.Type != TypeEmpty {
 		return
 	}
 
@@ -195,9 +199,9 @@ func (m *Minefield) generateField() {
 		randCol := rand.Intn(m.width)
 
 		cell := m.getCell(randRow, randCol)
-		if cell.t == TypeEmpty {
-			cell.t = TypeMine
-			cell.s = StateClosed
+		if cell.Type == TypeEmpty {
+			cell.Type = TypeMine
+			cell.State = StateClosed
 			minesSet++
 		}
 	}
@@ -205,8 +209,8 @@ func (m *Minefield) generateField() {
 	for row := 0; row < m.height; row++ {
 		for col := 0; col < m.width; col++ {
 			cell := m.getCell(row, col)
-			if cell.t == TypeEmpty {
-				cell.t = m.getHint(row, col)
+			if cell.Type == TypeEmpty {
+				cell.Type = m.getHint(row, col)
 			}
 		}
 	}
@@ -236,5 +240,5 @@ func (m *Minefield) isInBounds(row, col int) bool {
 }
 
 func (m *Minefield) isMine(row, col int) bool {
-	return m.isInBounds(row, col) && m.field[row][col].t == TypeMine
+	return m.isInBounds(row, col) && m.field[row][col].Type == TypeMine
 }
